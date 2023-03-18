@@ -3,38 +3,42 @@ library(here)
 
 # paths
 gitdir <- here()
-gitdir.data <- file.path(gitdir, 'data')
-gitdir.plots <- file.path(gitdir, 'plots')
+gitdir.data <- file.path(gitdir, "data")
+gitdir.plots <- file.path(gitdir, "plots")
 
 path.data <- file.path(gitdir.data, "walden_exercise2.csv")
 
-# paramrams
+# parameters
 A = 46
-K = 40
+K = 10
 r = 3
-mu=(2*K)/(K-r+1)
+mu = (2*K)/(K-r+1)
 
 # load data
-W_samples <- fread(path.data)  |> unlist() |> unname()
-stopifnot(length(W_samples) == K)
+wilk_samples <- fread(path.data)
+names(wilk_samples) <- NULL
+wilk_samples <- unlist(wilk_samples)
 
 # sort
-W_samples_ordered <- sort(W_samples)
+wilk_samples <- sort(wilk_samples)
 # normalise
-W_norm <- (W_samples_ordered - A*mu)/(sqrt(A)*mu)
+wilk_samples_normalised <- (wilk_samples - A*mu)/(sqrt(A)*mu)
 
-# null distribution Gamma(A, (K - r + 1)/2K )
-tmp <- rgamma(n=100000, shape=A, rate=(K-r+1)/(2*K))
+# null distribution Gamma(A, (K - r + 1)/2K)
+null_samples <- rgamma(n=100000, shape=A, scale=mu)
 
-filename=file.path(gitdir.plots, 'qqplots.png')
+filename=file.path(gitdir.plots, "qqplots.png")
 png(filename=filename, width=800, height=500)
 par(mfrow=c(1,2))
 # make first qqplot
-qqplot( tmp, W_samples_ordered,
-    main="Gamma Q-Q Plot",
-    xlab="Theoretical Quantiles",
-    ylab="Sample Quantiles")
+qqplot(
+  null_samples, 
+  wilk_samples,
+  main="Gamma Q-Q Plot",
+  xlab="Theoretical Quantiles",
+  ylab="Sample Quantiles",
+)
 abline(0,1)
-qqnorm(W_norm)
+qqnorm(wilk_samples_normalised)
 abline(0,1)
 dev.off()
