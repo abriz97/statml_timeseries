@@ -69,7 +69,7 @@ build_partial_coherences <- function(f)
         }
     }
 
-    suppressWarnings(partial_coherence <- as.numeric(partial_coherence))
+    suppressWarnings(partial_coherence <- Re(partial_coherence))
     partial_coherence
 }
 
@@ -84,12 +84,47 @@ fl_final <- get_frequency_grid(B=B, fl=fl)
 S_dt <- S_dt[freq %in% fl_final]
 S_dt[, complex := real + 1i*imaginary]
 
-# 
+# ~ eq 44. (?)
 partial_coherences <- lapply(fl_final, build_partial_coherences)
 
+# compute the waldh
 
-carry_wilk_MHT <- function()
+carry_wilk_MHT <- function(alpha=0.05, PC=partial_coherences)
 {
+
+    # compute W_stat for all pairs
+    log_1_gammasq <- lapply(PC, function(X) log(1 - X) ) 
+    W_stat = -2*K*Reduce(`+`,log_1_gammasq)
+
+    W_stat_data_table <- data.table(i=0, j=0,W=0)
+    for ( i in 1:nrow(W_stat)-1)
+    {
+        for( j in (i+1):nrow(W_stat))
+        {
+            cat(i,j,'\n')
+            tmp <- data.table(i=i, j=j, W=W_stat[i, j])
+            W_stat_data_table <- rbind(W_stat_data_table, tmp)
+        }
+    }
+    W_stat_data_table <- W_stat_data_table[i != 0]
+
+
+    # follow maximum stepdown procedure
+
+    # compute the FWER(alpha)
+    # F^{-1}_W (1-alpha/i)
+
+    # order
+    setkey(W_stat_data_table, W)
+
+    # compute C_i
+
+    # parameters of gamma distribution
+    # A = ?
+    scale = (2*K)/(K-r+1)
+    null_samples <- rgamma(n=100000, shape=A, scale=scale)
+
+
 }
 
 
