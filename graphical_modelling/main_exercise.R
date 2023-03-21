@@ -88,7 +88,6 @@ S_dt[, complex := real + 1i*imaginary]
 partial_coherences <- lapply(fl_final, build_partial_coherences)
 
 # compute the waldh
-
 carry_wilk_MHT <- function(alpha=0.05, PC=partial_coherences)
 {
 
@@ -113,18 +112,20 @@ carry_wilk_MHT <- function(alpha=0.05, PC=partial_coherences)
 
     # compute the FWER(alpha)
     # F^{-1}_W (1-alpha/i)
+    # parameters of gamma distribution
+    A = length(fl_final)
+    scale = (2*K)/(K-r+1)
+    C_i <- sapply((1 - alpha/(1:(r*(r-1)/2))), function(x) qgamma(x, shape=A, scale=scale))
 
     # order
     setkey(W_stat_data_table, W)
 
-    # compute C_i
+    # append c_i
+    W_stat_data_table$C_i <- C_i
 
-    # parameters of gamma distribution
-    # A = ?
-    scale = (2*K)/(K-r+1)
-    null_samples <- rgamma(n=100000, shape=A, scale=scale)
-
-
+    # Column of Booleans for whether to accept the null
+    W_stat_data_table$accept_null <- (W_stat_data_table$W < C_i)
+    
 }
 
 
